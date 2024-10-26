@@ -1,10 +1,10 @@
- import { Webhook } from "svix"
+import { Webhook } from "svix"
 import userModel from "../models/userModel.js"
- 
- // API Controller Function to mange clerk user with database
- // http://localhost:4000/api/user/webhooks
 
- const clerkWebhooks = async (req,res) =>{
+// API Controller Function to mange clerk user with database
+// http://localhost:4000/api/user/webhooks
+
+const clerkWebhooks = async (req, res) => {
 
 
 
@@ -12,66 +12,65 @@ import userModel from "../models/userModel.js"
         // Create a svix instance wiht clerk webhook secret.
         const whook = new Webhook(process.env.CLERK_WEBHOOK_SECRET)
 
-        await whook.verify(JSON.stringify(req.body),{
-            "svix-id":req.header["svix-id"],
-            "svix-timestamp":req.headers["svix-timestamp"],
-            "svix-signature":req.headers["svix-signature"]
+        await whook.verify(JSON.stringify(req.body), {
+            "svix-id": req.headers["svix-id"],
+            "svix-timestamp": req.headers["svix-timestamp"],
+            "svix-signature": req.headers["svix-signature"]
 
         })
 
-        const {data , type}= req.body
+        const { data, type } = req.body
+        
         switch (type) {
-            case "user.created":{
-
-                const userData={
+            case "user.created": {
+                const userData = {
                     clerkId: data.id,
                     email: data.email_addresses[0].email_address,
-                    firstName:data.first_name,
-                    lastName:data.last_name,
-                    photo:data.image_url
-
+                    firstName: data.first_name,
+                    lastName: data.last_name,
+                    photo: data.image_url
                 }
-
                 await userModel.create(userData)
                 res.json({})
+
                 break;
             }
-            case "user.updated":{
-                const userData={
-                    
+            case "user.updated": {
+
+                const userData = {
+
                     email: data.email_addresses[0].email_address,
-                    firstName:data.first_name,
-                    lastName:data.last_name,
-                    photo:data.image_url
+                    firstName: data.first_name,
+                    lastName: data.last_name,
+                    photo: data.image_url
 
                 }
-                await userModel.findOneAndUpdate({clerkId:data.id},userData)
+                await userModel.findOneAndUpdate({ clerkId: data.id }, userData)
                 res.json({})
 
 
                 break;
             }
-            case "user.deleted":{
-                await userModel.findOneAndDelete({clerkId:data.id})
+            case "user.deleted": {
+                await userModel.findOneAndDelete({ clerkId: data.id })
                 res.json({})
                 break;
             }
-                
-                
-        
+
+
+
             default:
                 break;
         }
 
 
-        
     } catch (error) {
-        console.log(error.message)
-        res.json({success:false,message:error.message})
-        
-        
+        console.log(error.message);
+        res.json({ success: false, message: error.message })
+
+
     }
 
- }
- export {clerkWebhooks}
+}
+export { clerkWebhooks };
 
